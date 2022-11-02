@@ -21,8 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"])
 
-@app.get("/components", response_model=list[Component])
+@app.get(
+    "/components",
+    response_model=list[Component],
+    response_description="Returns list of components.",
+    description="Get all available components.", 
+)
 async def get_components():
     headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
-    response = requests.get("https://components-service.deta.dev/components", headers=headers)
+    response = requests.get("https://cs-components-service.deta.dev/components", headers=headers)
     return response.json()
