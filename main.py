@@ -129,6 +129,28 @@ async def register_user(user_data: user_models.UserInModel):
 
     return post_user_response.json()
 
+@app.post(
+    "/login",
+    description="Authenticate a user.",
+    response_model=auth_models.AuthResponseModel,
+    response_description="Returns an object with the user name and access token for the authenticated user'.",
+    tags=["auth (identity provider)"]
+)
+async def login_user(user_data: auth_models.LoginModel):
+    
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'microserviceAccessToken':identity_provider_access_token}
+    login_user_response = requests.post(f"https://cs-identity-provider.deta.dev/login", json=user_data.dict(), headers=headers)
+
+    if login_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
+    if login_user_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    return login_user_response.json()
+
 
 
 @app.delete(
