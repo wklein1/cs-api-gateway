@@ -105,16 +105,17 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Heade
         decoded_token = jwt_encoder.decode_jwt(token=token,audience=JWT_AUDIENCE,issuer=JWT_ISSUER)
     except:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
-
     user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=headers)
+    
     if delete_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
     if delete_user_response.status_code == status.HTTP_403_FORBIDDEN:
-        if delete_user_response.json()["detail"] == "Invalid token":
+        if delete_user_response.json() == {"detail":"Invalid token"}:
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
-        else:
-            return delete_user_response
+        elif {"detail":"Invalid password"}:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
