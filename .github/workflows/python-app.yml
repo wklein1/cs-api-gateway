@@ -25,6 +25,7 @@ jobs:
          echo COMPONENTS_SERVICE_API_KEY=${{ secrets.COMPONENTS_SERVICE_API_KEY }} >> .env
          echo TEST_USER_ID=${{ secrets.TEST_USER_ID }} >> .env
          echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
+         echo VALID_TOKEN=${{ secrets.VALID_TOKEN }} >> .env
          echo IDENTITY_PROVIDER_ACCESS_KEY=${{ secrets.IDENTITY_PROVIDER_ACCESS_KEY }} >> .env
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
