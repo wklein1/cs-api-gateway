@@ -46,7 +46,7 @@ async def get_components():
     tags=["currency microservice"] 
 )
 async def get_currencies():
-    headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
+    headers = {'Content-Type': 'application/json'}
     response = requests.get("https://cs-currency-service.deta.dev/currencies", headers=headers)
     if response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -67,7 +67,7 @@ async def get_currencies():
     tags=["currency microservice"] 
 )
 async def get_currency_exchange_rate(old_currency_code, new_currency_code):
-    headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
+    headers = {'Content-Type': 'application/json'}
     response = requests.get(f"https://cs-currency-service.deta.dev/currencies/{old_currency_code}/{new_currency_code}", headers=headers)
     if response.status_code != status.HTTP_200_OK:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
