@@ -24,3 +24,15 @@ def test_get_currencies_endpoint():
     #ASSERT
     assert response.status_code == 200
     assert all(currency in response.json() for currency in expected_currencies_sublist)
+
+
+def test_get_currency_exchange_rate():
+    #ARRANGE
+    client = TestClient(app)
+    
+    expected_key = "exchangeRate"
+    #ACT
+    response = client.get("/currencies/EUR/USD")
+    #ASSERT
+    assert response.status_code == 200
+    assert response.json()[expected_key]
