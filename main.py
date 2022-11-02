@@ -110,8 +110,7 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Heade
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
-    delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.json(), headers=headers)
-    
+    delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=headers)
     if delete_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
     if delete_user_response.status_code == status.HTTP_403_FORBIDDEN:
