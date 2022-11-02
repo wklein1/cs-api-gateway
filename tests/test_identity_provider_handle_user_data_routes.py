@@ -6,9 +6,10 @@ from main import app
 
 def test_delete_user_endpoint_invalid_password():
     #ARRANGE
+    VALID_TOKEN=config("VALID_TOKEN")
     client = TestClient(app)
     del_user = {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjNDc1NzliNy01YWYxLTExZWQtYmI2Yi0yYmUxM2RmNmUwNzYiLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MjI5OTQuNzY3MjQzLCJleHAiOjE2Njc0MjQxOTUuNzY3MjYxfQ.La34X9n-IrmvubCekWPHK5mTwS0sv7IBzkCIp4xY3Pc"
+          "token": VALID_TOKEN
     }
     expected_error = {
         "detail":"Invalid password"
@@ -23,11 +24,18 @@ def test_delete_user_endpoint_invalid_password():
 def test_delete_user_endpoint_success():
     #ARRANGE
     client = TestClient(app)
-    
+    test_user = {
+        "first_name":"test",
+        "last_name":"test",
+        "user_name":"test_usr2",
+        "email":"test@test.com",
+        "password":"testtesttest4"
+    }
+    new_user = client.post("/users",json=test_user)
     del_user = {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjNDc1NzliNy01YWYxLTExZWQtYmI2Yi0yYmUxM2RmNmUwNzYiLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MjI5OTQuNzY3MjQzLCJleHAiOjE2Njc0MjQxOTUuNzY3MjYxfQ.La34X9n-IrmvubCekWPHK5mTwS0sv7IBzkCIp4xY3Pc"
+          "token": new_user.json()["token"]
     }
     #ACT
-    response = client.delete("/users", json={"password":"testpassword1"}, headers=del_user)
+    response = client.delete("/users", json={"password":"testtesttest4"}, headers=del_user)
     #ASSERT
     assert response.status_code == 204

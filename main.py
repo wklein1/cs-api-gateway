@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status,Header
 from fastapi.middleware.cors import CORSMiddleware
 from models.component_model import Component
-from models import error_models, currency_models, auth_models
+from models import error_models, currency_models, auth_models, user_models
 from modules.jwt.jwt_module import JwtEncoder
 from datetime import datetime,timedelta
 from decouple import config
@@ -19,7 +19,6 @@ app = FastAPI()
 jwt_encoder = JwtEncoder(secret=JWT_SECRET, algorithm=JWT_ALGORITHM)
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 
-
 origins = [
     "http://localhost",
     "http://localhost:3000",
@@ -32,6 +31,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"])
+
+def decode_auth_token(token:str)->dict:
+    try:
+        return jwt_encoder.decode_jwt(token=token,audience=JWT_AUDIENCE,issuer=JWT_ISSUER)
+    except:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
 @app.get(
     "/components",
@@ -85,6 +90,47 @@ async def get_currency_exchange_rate(old_currency_code, new_currency_code):
     return response.json()
 
 
+@app.post(
+    "/users",
+    description="Register a new user.",
+    status_code=status.HTTP_201_CREATED,
+    responses={ 
+        503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if microservice request fails."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided user data is not valid."
+        },
+        409 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if the provided username is already taken."
+        }},
+    response_model=auth_models.AuthResponseModel,
+    response_description="Returns an object with the user name and access token for the registered user'.",
+    tags=["auth (identity provider)"]
+)
+async def register_user(user_data: user_models.UserInModel):
+    
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'microserviceAccessToken':identity_provider_access_token}
+    post_user_response = requests.post(f"https://cs-identity-provider.deta.dev/users", json=user_data.dict(), headers=headers)
+    
+    if post_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
+    if post_user_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    if post_user_response.status_code == status.HTTP_409_CONFLICT:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User name is already taken")
+
+    return post_user_response.json()
+
+
+
 @app.delete(
      "/users",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -97,14 +143,13 @@ async def get_currency_exchange_rate(old_currency_code, new_currency_code):
             "description": "Error raised if the provided password is invalid."
         }},
     description="Deletes a user.",
-    tags=["user data"]
+    tags=["user data (identity provider)"]
 
 )
 async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Header()):
-    try:
-        decoded_token = jwt_encoder.decode_jwt(token=token,audience=JWT_AUDIENCE,issuer=JWT_ISSUER)
-    except:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+    
+    decoded_token = decode_auth_token(token)
+
     user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
