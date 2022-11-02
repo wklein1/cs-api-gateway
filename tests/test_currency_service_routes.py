@@ -23,4 +23,4 @@ def test_get_currencies_endpoint():
     response = client.get("/currencies")
     #ASSERT
     assert response.status_code == 200
-    assert all(currencie in response.json() for currencie in expected_currencies_sublist)
+    assert all(currency in response.json() for currencies in expected_currencies_sublist)
