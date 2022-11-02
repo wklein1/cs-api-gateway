@@ -53,3 +53,22 @@ async def get_currencies():
     if response.json() == {}:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
     return response.json()
+
+
+@app.get(
+    "/currencies/{old_currency_code}/{new_currency_code}",
+    response_model=currency_models.ExchangeRateResponseModel,
+    response_description="Returns exchange rate from old currency to new",
+    responses={503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if microservice request fails."
+        }},
+    description="Get exchange rate from old currency to new.",
+    tags=["currency microservice"] 
+)
+async def get_currency_exchange_rate(old_currency_code, new_currency_code):
+    headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
+    response = requests.get(f"https://cs-currency-service.deta.dev/currencies/{old_currency_code}/{new_currency_code}", headers=headers)
+    if response.status_code != status.HTTP_200_OK:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+    return response.json()
