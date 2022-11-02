@@ -8,7 +8,7 @@ def test_delete_user_endpoint_invalid_password():
     #ARRANGE
     client = TestClient(app)
     del_user = {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NWNiMzM5Zi01YWNiLTExZWQtYjdkYS02Mzk0M2E2ZTA2MTciLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MDY1NjguODczMjU4LCJleHAiOjE2Njc0MDc3NjkuODczMjc0fQ.IxZcCfurOncZdNfdZQOQGQq1L1rtRJzZGMvvAaRm-As"
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlYmFkMmFlZC01YWU0LTExZWQtYjZhNy02YmExMGJlZTYzOTYiLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MTc0NzcuMjAxMzM2LCJleHAiOjE2Njc0MTg2NzguMjAxMzYyfQ.nH-0oHY_74lV_TozZL2ftVxVJclVtolFA_3UsLQox0o"
     }
     expected_error = {
         "detail":"Invalid password"
@@ -25,7 +25,7 @@ def test_delete_user_endpoint_success():
     client = TestClient(app)
     
     del_user = {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NWNiMzM5Zi01YWNiLTExZWQtYjdkYS02Mzk0M2E2ZTA2MTciLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MDY1NjguODczMjU4LCJleHAiOjE2Njc0MDc3NjkuODczMjc0fQ.IxZcCfurOncZdNfdZQOQGQq1L1rtRJzZGMvvAaRm-As"
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlYmFkMmFlZC01YWU0LTExZWQtYjZhNy02YmExMGJlZTYzOTYiLCJhdWQiOiJrYmUtYXcyMDIyLWZyb250ZW5kLm5ldGxpZnkuYXBwIiwiaXNzIjoiY3MtaWRlbnRpdHktcHJvdmlkZXIuZGV0YS5kZXYiLCJpYXQiOjE2Njc0MTc0NzcuMjAxMzM2LCJleHAiOjE2Njc0MTg2NzguMjAxMzYyfQ.nH-0oHY_74lV_TozZL2ftVxVJclVtolFA_3UsLQox0o"
     }
     #ACT
     response = client.delete("/users", json={"password":"testpassword1"}, headers=del_user)
