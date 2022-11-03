@@ -137,7 +137,7 @@ async def register_user(user_data: user_models.UserInModel):
 )
 async def login_user(user_data: auth_models.LoginModel):
     
-    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=5)).timestamp()})
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
     headers = {'Content-Type': 'application/json', 'microserviceAccessToken':identity_provider_access_token}
     login_user_response = requests.post(f"https://cs-identity-provider.deta.dev/login", json=user_data.dict(), headers=headers)
@@ -150,6 +150,44 @@ async def login_user(user_data: auth_models.LoginModel):
 
     return login_user_response.json()
 
+
+@app.get(
+    "/users/{user_id}",
+    description="Get user data of a given user.",
+    responses={ 
+        404 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if the user could not be found."
+        },
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised by unauthenticated requests."
+        },
+        401 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised by unauthorized requests."
+        }},
+    response_model=user_models.UserOutModel,
+    response_description="Returns an object with user data.",
+    tags=["user data (identity provider)"]
+)
+async def get_user_data(user_id:str, token: str = Header()):
+    
+    decoded_token = decode_auth_token(token)
+
+    token_user_id = decoded_token["userId"]
+    if token_user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to get this data")
+
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    get_user_data_response = requests.get(f"https://cs-identity-provider.deta.dev/users/{user_id}", headers=headers)
+    
+    if get_user_data_response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return get_user_data_response.json()
 
 
 @app.delete(
