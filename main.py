@@ -32,11 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"])
 
-def decode_auth_token(token:str)->dict:
+def decode_auth_token(token:str)->dict|None:
     try:
         return jwt_encoder.decode_jwt(token=token,audience=JWT_AUDIENCE,issuer=JWT_ISSUER)
     except:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+        return None
 
 @app.get(
     "/components",
@@ -161,11 +161,11 @@ async def login_user(user_data: auth_models.LoginModel):
         },
         403 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised by unauthenticated requests."
+            "description": "Error raised if the provided token is invalid."
         },
         401 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised by unauthorized requests."
+            "description": "Error raised if request is unauthorized."
         }},
     response_model=user_models.UserOutModel,
     response_description="Returns an object with user data.",
@@ -174,6 +174,8 @@ async def login_user(user_data: auth_models.LoginModel):
 async def get_user_data(user_id:str, token: str = Header()):
     
     decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     token_user_id = decoded_token["userId"]
     if token_user_id != user_id:
@@ -188,6 +190,64 @@ async def get_user_data(user_id:str, token: str = Header()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     return get_user_data_response.json()
+
+
+@app.patch(
+    "/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_description="Returns no data.",
+    responses={
+        503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if microservice request fails."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided user updates are not valid."
+        },
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided password or token is invalid."
+            },
+        401 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if request is unauthorized."
+        },
+        404 :{
+                "model": error_models.HTTPErrorModel,
+                "description": "Error raised if the user can not be found."
+        }},
+    description="Updates user with values specified in request body.",
+    tags=["user data (identity provider)"]
+)
+async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: str, token: str = Header()):
+    
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    token_user_id = decoded_token["userId"]
+    if token_user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to change this data")
+    
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    patch_data_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}", json=user_data.dict(), headers=headers)
+    
+    if patch_data_response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+   
+    if patch_data_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
+    
+    if patch_data_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=patch_data_response.json())
+
+    if patch_data_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    # All checks passed:
+    return
 
 
 @app.delete(
@@ -208,6 +268,8 @@ async def get_user_data(user_id:str, token: str = Header()):
 async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Header()):
     
     decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
