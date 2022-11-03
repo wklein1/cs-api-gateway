@@ -24,26 +24,6 @@ def test_register_user_endpoint_success():
     client.delete("/users", json={"password":"testtesttest4"}, headers={"token":response.json()["token"]})
 
 
-def test_register_user_endpoint_fails_user_name_already_taken():
-    #ARRANGE
-    client = TestClient(app)
-    test_user = {
-        "first_name":"test",
-        "last_name":"test",
-        "user_name":"test_usr",
-        "email":"test@test.com",
-        "password":"testtesttest4"
-    }
-    expected_error = {
-        "detail":"User name is already taken"
-    }
-    #ACT
-    response = client.post("/users",json=test_user)
-    #ASSERT
-    assert response.status_code == 409
-    assert response.json() == expected_error
-
-
 def test_register_user_endpoint_fails_invalid_password():
     #ARRANGE
     client = TestClient(app)

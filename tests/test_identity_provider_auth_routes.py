@@ -29,5 +29,5 @@ def test_login_user_endpoint_fails_invalid_credentials():
     #ACT
     response = client.post("/login",json=test_user)
     #ASSERT
-    assert response.status_code == 422
-    assert response.json() == {'detail': 'Unprocessable Entity'}
+    assert response.status_code == 403
+    assert response.json() == {'detail': 'Invalid credentials'}
