@@ -102,11 +102,7 @@ async def get_currency_exchange_rate(old_currency_code, new_currency_code):
         422 :{
             "model": error_models.HTTPErrorModel,
             "description": "Error raised if provided user data is not valid."
-        },
-        409 :{
-            "model": error_models.HTTPErrorModel,
-            "description": "Error raised if the provided username is already taken."
-        }},
+        },},
     response_model=auth_models.AuthResponseModel,
     response_description="Returns an object with the user name and access token for the registered user'.",
     tags=["auth (identity provider)"]
@@ -124,16 +120,19 @@ async def register_user(user_data: user_models.UserInModel):
     if post_user_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    if post_user_response.status_code == status.HTTP_409_CONFLICT:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User name is already taken")
-
     return post_user_response.json()
+
 
 @app.post(
     "/login",
     description="Authenticate a user.",
     response_model=auth_models.AuthResponseModel,
     response_description="Returns an object with the user name and access token for the authenticated user'.",
+    responses={ 
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided credentials are invalid"
+        }},
     tags=["auth (identity provider)"]
 )
 async def login_user(user_data: auth_models.LoginModel):
@@ -146,8 +145,8 @@ async def login_user(user_data: auth_models.LoginModel):
     if login_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
     
-    if login_user_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    if login_user_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     return login_user_response.json()
 
