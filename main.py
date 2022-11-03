@@ -138,7 +138,7 @@ async def register_user(user_data: user_models.UserInModel):
 )
 async def login_user(user_data: auth_models.LoginModel):
     
-    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=5)).timestamp()})
     
     headers = {'Content-Type': 'application/json', 'microserviceAccessToken':identity_provider_access_token}
     login_user_response = requests.post(f"https://cs-identity-provider.deta.dev/login", json=user_data.dict(), headers=headers)
