@@ -29,15 +29,30 @@ def test_get_user_endpoint_returns_user_data():
 def test_get_user_endpoint_fails_user_not_found():
     #ARRANGE
     client = TestClient(app)
-    VALID_TOKEN=config("VALID_TOKEN")
+    JWT_SECRET = config("JWT_SECRET")
+    jwt_aud="kbe-aw2022-frontend.netlify.app"
+    jwt_iss="cs-identity-provider.deta.dev"
+    jwt_encoder = JwtEncoder(JWT_SECRET, "HS256")
+    test_user = {
+        "first_name":"test",
+        "last_name":"test",
+        "user_name":"test_usr2",
+        "email":"test@test.com",
+        "password":"testtesttest4"
+    }
+    new_user = client.post("/users",json=test_user)
+    new_user = new_user.json()
+    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
+    client.delete("/users", json={"password":"testtesttest4"}, headers={"token":new_user["token"]})
     get_user_header = {
-          "token": VALID_TOKEN
+          "token": new_user["token"]
     }
     expected_error = {
         "detail": "User not found"
     }
+
     #ACT
-    response = client.get("/users/not_existing_id", headers=get_user_header)
+    response = client.get(f"/users/{new_user_id}", headers=get_user_header)
     #ASSERT
     assert response.status_code == 404
     assert response.json() == expected_error
@@ -46,6 +61,7 @@ def test_get_user_endpoint_fails_user_not_found():
 def test_get_user_endpoint_fails_invalid_token():
     #ARRANGE
     client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
     get_user_header = {
           "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MDNjN2I2Yi00MDA5LTExZWQtYWRiZS03NzQyY2VmNGI1MDQiLCJleHAiOjE2Njc0NjIzODQuNzY1Njk1fQ.QTGA2c2r2EGZ6hjZ0OPqKuXf9VfHnPuTJDi40tvOfW4"
     }
