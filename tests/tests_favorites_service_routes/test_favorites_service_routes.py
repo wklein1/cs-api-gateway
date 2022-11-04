@@ -34,7 +34,7 @@ def test_post_favorite_endpoint_fails_invalid_token():
     #ACT
     response = client.post("/favorites/items",json={"id":"546c08d7-539d-11ed-a980-cd9f67f7363d","itemType":"component"}, headers=auth_header)
     #ASSERT
-    assert response.status_code == 409
+    assert response.status_code == 403
     assert response.json() == expected_error
 
 
