@@ -348,6 +348,29 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Heade
         elif {"detail":"Invalid password"}:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
 
+@app.get(
+    "/products",
+    response_model=list[product_models.ProductResponseModel],
+    response_description="Returns list with products",
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if the provided token is invalid."
+        }},
+    description="Get all products belonging to a user.",    
+)
+async def get_products_for_user(token: str = Header()):
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
+    get_products_response = requests.get(f"https://cs-product-service.deta.dev/products", headers=headers)
+
+    return get_products_response.json()
+    
 
 @app.post(
     "/products",
