@@ -121,7 +121,7 @@ async def register_user(user_data: user_models.UserInModel):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
     
     if post_user_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=post_user_response.json())
 
     return post_user_response.json()
 
@@ -456,6 +456,10 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
         404 :{
                 "model": error_models.HTTPErrorModel,
                 "description": "Error raised if the product to update can not be found."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided product updates are not valid."
         }},
     description="Updates product with values specified in request body.",
 )
@@ -534,12 +538,50 @@ async def adds_item_to_user_favorites_list(item_to_add:favorites_models.ToggleFa
     favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
-    post_favorite_response = requests.post(f"https://cs-favorites-service.deta.dev/favorites/items", json=item_to_add.dict(), headers=headers)
+    post_favorite_response = requests.post("https://cs-favorites-service.deta.dev/favorites/items", json=item_to_add.dict(), headers=headers)
    
     if post_favorite_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
    
     if post_favorite_response.status_code == status.HTTP_409_CONFLICT:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item is already in favorites list.")
+    # all checks passed:
+    return
+
+
+@app.delete(    
+     "/favorites/items",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided token is invalid."
+        },
+        503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if database request fails."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided item to delete is not valid."
+        }},
+    description="Removes an item from the favorites list of a user"
+)
+async def delete_item_from_favorites_for_user(item_to_remove:favorites_models.ToggleFavoriteModel, token: str = Header()):
+    
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    delete_favorite_response = requests.delete("https://cs-favorites-service.deta.dev/favorites/items", json=item_to_remove.dict(), headers=headers)
+   
+    if delete_favorite_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+
+    if delete_favorite_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=delete_favorite_response.json())
     # all checks passed:
     return
