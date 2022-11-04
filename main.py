@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status,Header
 from fastapi.middleware.cors import CORSMiddleware
 from models.component_model import Component
-from models import error_models, currency_models, auth_models, user_models, product_models
+from models import error_models, currency_models, auth_models, user_models, product_models, favorites_models
 from modules.jwt.jwt_module import JwtEncoder
 from datetime import datetime,timedelta
 from decouple import config
@@ -9,6 +9,7 @@ import requests
 
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
 PRODUCT_SERVICE_ACCESS_KEY = config("PRODUCT_SERVICE_ACCESS_KEY")
+FAVORITES_SERVICE_ACCESS_KEY = config("FAVORITES_SERVICE_ACCESS_KEY")
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM="HS256"
 JWT_AUDIENCE="kbe-aw2022-frontend.netlify.app"
@@ -19,6 +20,7 @@ app = FastAPI()
 jwt_encoder = JwtEncoder(secret=JWT_SECRET, algorithm=JWT_ALGORITHM)
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 product_service_jwt_encoder = JwtEncoder(secret=PRODUCT_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
+favorites_service_jwt_encoder = JwtEncoder(secret=FAVORITES_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 
 origins = [
     "http://localhost",
@@ -481,7 +483,6 @@ async def patch_product_by_id(product: product_models.ProductModel, product_id, 
     return
         
 
-
 @app.delete(
     "/products/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -504,3 +505,41 @@ async def delete_product_by_id(product_id, token: str = Header()):
     
     if delete_product_response.status_code == status.HTTP_403_FORBIDDEN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not allowed to delete a product not owned.")
+
+
+@app.post(
+    "/favorites/items",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided token is invalid."
+        },
+        409 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if item is already in favorites list."
+        },
+        503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if microservice request fails."
+        }},
+    description="Adds an item to the favorites list of the user.",
+)
+async def adds_item_to_user_favorites_list(item_to_add:favorites_models.ToggleFavoriteModel, token: str = Header()):
+   
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    post_favorite_response = requests.post(f"https://cs-favorites-service.deta.dev/favorites/items", json=item_to_add.dict(), headers=headers)
+   
+    if post_favorite_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+   
+    if post_favorite_response.status_code == status.HTTP_409_CONFLICT:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item is already in favorites list.")
+    # all checks passed:
+    return
