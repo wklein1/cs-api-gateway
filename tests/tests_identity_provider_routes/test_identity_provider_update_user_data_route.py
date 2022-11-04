@@ -32,7 +32,7 @@ def test_update_user_data_endpoint_success():
         "userName":"test_usr2_updated",
         "email":"updated@test.com",
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -74,7 +74,7 @@ def test_update_user_data_endpoint_no_user_name_change_success():
         "userName":"test_usr2",
         "email":"updated@test.com",
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -113,7 +113,7 @@ def test_update_user_data_endpoint_fails_invalid_password():
     expected_error = {
         "detail":"Invalid password"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -168,7 +168,7 @@ def test_update_user_data_endpoint_fails_user_not_found():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
    
@@ -208,7 +208,7 @@ def test_update_user_data_endpoint_fails_user_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -244,7 +244,7 @@ def test_update_user_data_endpoint_fails_first_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -280,7 +280,7 @@ def test_update_user_data_endpoint_fails_last_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {
@@ -316,7 +316,7 @@ def test_update_user_data_endpoint_fails_email_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     headers = {

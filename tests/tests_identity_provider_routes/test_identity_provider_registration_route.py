@@ -15,13 +15,13 @@ def test_register_user_endpoint_success():
         "password":"testtesttest4"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 201
     assert "token" in response.json()
     assert response.json()["userName"] == "test_usr2"
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers={"token":response.json()["token"]})
+    client.delete("/register", json={"password":"testtesttest4"}, headers={"token":response.json()["token"]})
 
 
 def test_register_user_endpoint_fails_invalid_password():
@@ -35,7 +35,7 @@ def test_register_user_endpoint_fails_invalid_password():
         "password":"test"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 422
 
@@ -51,7 +51,7 @@ def test_register_user_endpoint_fails_invalid_email():
         "password":"testtesttest4"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 422
 
@@ -67,7 +67,7 @@ def test_register_user_endpoint_fails_invalid_first_name():
         "password":"testtesttest4"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 422
 
@@ -83,7 +83,7 @@ def test_register_user_endpoint_fails_invalid_last_name():
         "password":"testtesttest4"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 422
 
@@ -99,6 +99,6 @@ def test_register_user_endpoint_fails_invalid_user_name():
         "password":"testtesttest4"
     }
     #ACT
-    response = client.post("/users",json=test_user)
+    response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 422
