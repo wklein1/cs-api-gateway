@@ -370,6 +370,41 @@ async def get_products_for_user(token: str = Header()):
     get_products_response = requests.get(f"https://cs-product-service.deta.dev/products", headers=headers)
 
     return get_products_response.json()
+
+
+@app.get(
+    "/products/{product_id}", 
+    response_model=product_models.ProductResponseModel,
+    response_description="Returns product",
+    responses={
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if the provided token is invalid or the user tries to get a product owned by a different user."
+            },
+        404 :{
+                "model": error_models.HTTPErrorModel,
+                "description": "Error raised if the product cant be found."
+        }},
+    description="Get a product by its id, belonging to the user."
+)
+async def get_product_by_id(product_id, token: str = Header()):
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
+    get_product_response = requests.get(f"https://cs-product-service.deta.dev/products/{product_id}", headers=headers)
+
+    if get_product_response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found.")
+
+    if get_product_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not allowed to get a product not owned.")
+
+    return get_product_response.json()
     
 
 @app.post(

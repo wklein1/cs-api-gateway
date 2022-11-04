@@ -117,6 +117,79 @@ def test_get_products_endpoint_fails_invalid_token():
     assert get_response.json() == expected_error
 
 
+def test_get_single_product_endpoint_returns_product_for_user_by_id():
+    #ARRANGE
+    client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
+    expected_product = {
+        "productId":"29f6f518-53a8-11ed-a980-cd9f67f7363d",
+        "ownerId":TEST_USER_ID,
+        "name":"test product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"test product for get method",
+        "price":0.0
+    }
+    expected_product_id = expected_product['productId']
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    #ACT
+    response = client.get(f"/products/{expected_product_id}", headers=auth_header)
+    #ASSERT
+    assert response.status_code == 200
+    assert response.json() == expected_product
+
+def test_get_single_product_endpoint_fails_invalid_token():
+    #ARRANGE
+    client = TestClient(app)
+    VALID_TOKEN = config("VALID_TOKEN")
+    expected_error = {
+        "detail": "Invalid token"
+    }
+    auth_header = {
+          "token": "invalid_token"
+    }
+    #ACT
+    response = client.get("/products/not_existing_id", headers=auth_header)
+    #ASSERT
+    assert response.status_code == 403
+    assert response.json() == expected_error
+
+def test_get_single_product_endpoint_fails_for_not_existing_product():
+    #ARRANGE
+    client = TestClient(app)
+    VALID_TOKEN = config("VALID_TOKEN")
+    expected_error = {
+        "detail": "Product not found."
+    }
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    #ACT
+    response = client.get("/products/not_existing_id", headers=auth_header)
+    #ASSERT
+    assert response.status_code == 404
+    assert response.json() == expected_error
+
+
+def test_get_single_product_endpoint_fails_for_not_owned_product():
+    #ARRANGE
+    client = TestClient(app)
+    VALID_TOKEN = config("VALID_TOKEN")
+    expected_error = {
+        "detail": "User is not allowed to get a product not owned."
+    }
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    #ACT
+    response = client.get("/products/12345", headers=auth_header)
+    #ASSERT
+    assert response.status_code == 403
+    assert response.json() == expected_error
+
+
 def test_delete_product_endpoint_success():
     #ARRANGE
     client = TestClient(app)
