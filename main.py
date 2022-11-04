@@ -250,6 +250,67 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: s
     return
 
 
+@app.patch(
+    "/users/{user_id}/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_description="Returns no data.",
+    responses={
+        503 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if database request fails."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if password update is not valid."
+        },
+        401 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if request is unauthorized."
+        },
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if user password is invalid."
+            },
+        404 :{
+                "model": error_models.HTTPErrorModel,
+                "description": "Error raised if the user can not be found."
+        }},
+    description="Updates the user password.",
+    tags=["user data"]
+)
+async def change_user_password_by_id(change_password_data: user_models.UserChangePasswordInModel, user_id: str, token: str = Header()):
+    
+    user_change_password_dict = change_password_data.dict()
+    new_password = user_change_password_dict["new_password"]
+
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    token_user_id = decoded_token["userId"]
+    if token_user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to change this data")
+    
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    patch_password_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}/password", json=change_password_data.dict(), headers=headers)
+
+    if patch_password_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
+    if patch_password_response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+   
+    if patch_password_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
+    
+    if patch_password_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=patch_password_response.json())
+    # All checks passed:
+    return
+       
+
 @app.delete(
      "/users",
     status_code=status.HTTP_204_NO_CONTENT,

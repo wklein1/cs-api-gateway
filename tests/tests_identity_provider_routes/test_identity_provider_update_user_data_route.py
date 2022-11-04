@@ -152,7 +152,6 @@ def test_update_user_data_endpoint_fails_invalid_token():
     assert response.json() == expected_error
     
 
-
 def test_update_user_data_endpoint_fails_user_not_found():
     #ARRANGE
     client = TestClient(app)
