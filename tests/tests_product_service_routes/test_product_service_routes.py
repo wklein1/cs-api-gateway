@@ -114,7 +114,7 @@ def test_get_products_endpoint_fails_invalid_token():
     get_response = client.get(f"/products", headers=auth_header)
     #ASSERT
     assert get_response.status_code == 403
-    assert get_response == expected_error
+    assert get_response.json() == expected_error
 
 
 def test_delete_product_endpoint_success():
