@@ -190,6 +190,115 @@ def test_get_single_product_endpoint_fails_for_not_owned_product():
     assert response.json() == expected_error
 
 
+def test_patch_endpoint_updates_owned_product_success():
+    #ARRANGE
+    client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
+    test_product = {
+        "ownerId":TEST_USER_ID,
+        "name":"test new product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"new product from post request",
+        "price":0.0
+    }
+    updated_test_product = {
+        "ownerId":TEST_USER_ID,
+        "name":"test patched product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"updated product from patch request",
+        "price":0.0
+    }
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    post_response = client.post("/products",json=test_product, headers=auth_header)
+    test_product_id = post_response.json()["productId"]
+    #ACT
+    patch_response = client.patch(f"/products/{test_product_id}",json=updated_test_product, headers=auth_header)
+    #ASSERT
+    assert patch_response.status_code == 204
+    #CLEANUP
+    client.delete(f"/products/{test_product_id}",headers=auth_header)
+
+
+def test_patch_endpoint_fails_invalid_token():
+    #ARRANGE
+    client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
+    updated_test_product = {
+        "ownerId":TEST_USER_ID,
+        "name":"test patched product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"updated product from patch request",
+        "price":0.0
+    }
+    expected_error = {
+        "detail": "Invalid token"
+    }
+    auth_header = {
+          "token": "invalid_token"
+    }
+    #ACT
+    patch_response = client.patch("/products/12345",json=updated_test_product, headers=auth_header)
+    #ASSERT
+    assert patch_response.status_code == 403
+    assert patch_response.json() == expected_error
+
+    
+def test_patch_endpoint_fails_updating_not_owned_product():
+    #ARRANGE
+    client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
+    updated_test_product = {
+        "ownerId":TEST_USER_ID,
+        "name":"test patched product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"updated product from patch request",
+        "price":0.0
+    }
+    expected_error = {
+        "detail": "Modifications are only allowed by the owner of the product."
+    }
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    #ACT
+    patch_response = client.patch("/products/12345",json=updated_test_product, headers=auth_header)
+    #ASSERT
+    assert patch_response.status_code == 403
+    assert patch_response.json() == expected_error
+
+
+def test_patch_endpoint_fails_updating_not_existing_product():
+    #ARRANGE
+    client = TestClient(app)
+    TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
+    updated_test_product = {
+        "ownerId":TEST_USER_ID,
+        "name":"test patched product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"updated product from patch request",
+        "price":0.0
+    }
+    expected_error = {
+        "detail": "Product not found."
+    }
+    auth_header = {
+          "token": VALID_TOKEN
+    }
+    #ACT
+    patch_response = client.patch("/products/not_existing_id",json=updated_test_product, headers=auth_header)
+    #ASSERT
+    assert patch_response.status_code == 404
+    assert patch_response.json() == expected_error
+    
+    
+
+
 def test_delete_product_endpoint_success():
     #ARRANGE
     client = TestClient(app)

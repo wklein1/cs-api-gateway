@@ -442,6 +442,46 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
     return post_product_response.json()
 
 
+@app.patch(
+    "/products/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_description="Returns no data.",
+    responses={
+        403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided token is invalid or user tries to update a product not owned."
+            },
+        404 :{
+                "model": error_models.HTTPErrorModel,
+                "description": "Error raised if the product to update can not be found."
+        }},
+    description="Updates product with values specified in request body.",
+)
+async def patch_product_by_id(product: product_models.ProductModel, product_id, token: str = Header()):
+   
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
+    patch_product_response = requests.patch(f"https://cs-product-service.deta.dev/products/{product_id}", json=product.dict(), headers=headers)
+    
+    if patch_product_response.status_code == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found.")
+
+    if patch_product_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Modifications are only allowed by the owner of the product.")
+
+    if patch_product_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=patch_product_response.json())
+    #all checks passed:
+    return
+        
+
+
 @app.delete(
     "/products/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
