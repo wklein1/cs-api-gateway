@@ -7,7 +7,6 @@ from datetime import datetime,timedelta
 from decouple import config
 import requests
 
-COMPONENTS_SERVICE_API_KEY = config("COMPONENTS_SERVICE_API_KEY")
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
 PRODUCT_SERVICE_ACCESS_KEY = config("PRODUCT_SERVICE_ACCESS_KEY")
 JWT_SECRET = config("JWT_SECRET")
@@ -47,7 +46,7 @@ def decode_auth_token(token:str)->dict|None:
     description="Get all available components.", 
 )
 async def get_components():
-    headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
+    headers = {'Content-Type': 'application/json'}
     response = requests.get("https://cs-components-service.deta.dev/components", headers=headers)
     return response.json()
 
