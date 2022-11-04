@@ -1,10 +1,12 @@
 from fastapi.testclient import TestClient
 from decouple import config
 from main import app
+from routes.product_service_routes import router
 
 def test_post_products_endpoint_success():
     #ARRANGE
     client = TestClient(app)
+
     TEST_USER_ID = config("TEST_USER_ID")
     VALID_TOKEN = config("VALID_TOKEN")
     test_product = {

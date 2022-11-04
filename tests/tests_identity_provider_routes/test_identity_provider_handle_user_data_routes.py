@@ -40,7 +40,7 @@ def test_get_user_endpoint_fails_user_not_found():
         "email":"test@test.com",
         "password":"testtesttest4"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     client.delete("/users", json={"password":"testtesttest4"}, headers={"token":new_user["token"]})
@@ -90,7 +90,7 @@ def test_get_user_endpoint_fails_unauthorized_user_id():
         "email":"test@test.com",
         "password":"testtesttest4"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -126,7 +126,7 @@ def test_change_password_endpoint_success():
         "password":"testtesttest4",
         "new_password":"testtesttest5"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -161,7 +161,7 @@ def test_change_password_endpoint_fails_forbidden_wrong_password():
     expected_error = {
         "detail":"Invalid password"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -197,7 +197,7 @@ def test_change_password_endpoint_fails_invalid_token():
     expected_error = {
         "detail":"Invalid token"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -230,7 +230,7 @@ def test_change_password_endpoint_fails_invalid_new_password():
         "password":"testtesttest4",
         "new_password":"invalid_new_password"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -265,7 +265,7 @@ def test_change_password_endpoint_fails_user_not_found():
     expected_error = {
         "detail": "User not found"
     }
-    new_user = client.post("/users",json=test_user)
+    new_user = client.post("/register",json=test_user)
     new_user = new_user.json()
     new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
     auth_header = {
@@ -306,7 +306,7 @@ def test_delete_user_endpoint_success():
         "email":"test@test.com",
         "password":"testtesttest4"
     }
-    new_user = client.post("/users",json=test_user).json()
+    new_user = client.post("/register",json=test_user).json()
     auth_header = {
           "token": new_user["token"]
     }
