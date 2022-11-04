@@ -219,7 +219,7 @@ def test_patch_endpoint_updates_owned_product_success():
     #ASSERT
     assert patch_response.status_code == 204
     #CLEANUP
-    client.delete(f"/products/{response_product_id}",headers=auth_header)
+    client.delete(f"/products/{test_product_id}",headers=auth_header)
 
 
 def test_patch_endpoint_fails_invalid_token():
