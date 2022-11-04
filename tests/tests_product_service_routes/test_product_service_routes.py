@@ -23,6 +23,9 @@ def test_post_products_endpoint_success():
     response_product = response.json()
     assert response.status_code == 201
     assert test_product.items() <=response_product.items()
+    #CLEANUP
+    client.delete(f"/products/{response_product['productId']}",headers=auth_header)
+
     
 
 def test_post_products_endpoint_fails_invalid_token():
@@ -126,7 +129,7 @@ def test_delete_product_endpoint_fails_for_not_owned_product():
         "detail": "User is not allowed to delete a product not owned."
     }
     #ACT
-    del_response = client.delete(f"/products/######",headers=auth_header)
+    del_response = client.delete("/products/12345",headers=auth_header)
     #ASSERT
     assert del_response.status_code == 403
     assert del_response.json() == expected_error
