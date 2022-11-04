@@ -511,6 +511,37 @@ async def delete_product_by_id(product_id, token: str = Header()):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not allowed to delete a product not owned.")
 
 
+@app.get(
+    "/favorites",
+    response_model=favorites_models.FavoritesModel,
+    response_description="Returns favorites object with lists of product and component favorites",
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided token is invalid."
+        },
+        503 :{
+            "model": error_models.HTTPErrorModel,
+        }},
+    description="Get all favorites belonging to a user.",    
+)
+async def get_favorites_for_user(token: str = Header()):
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    get_favorites_response = requests.get("https://cs-favorites-service.deta.dev/favorites", headers=headers)
+
+    if get_favorites_response.status_code != status.HTTP_200_OK:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
+    return get_favorites_response.json()
+   
+
+
 @app.post(
     "/favorites/items",
     status_code=status.HTTP_204_NO_CONTENT,
