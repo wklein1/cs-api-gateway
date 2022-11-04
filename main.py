@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status,Header
 from fastapi.middleware.cors import CORSMiddleware
 from models.component_model import Component
-from models import error_models, currency_models, auth_models, user_models
+from models import error_models, currency_models, auth_models, user_models, product_models
 from modules.jwt.jwt_module import JwtEncoder
 from datetime import datetime,timedelta
 from decouple import config
@@ -346,3 +346,38 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Heade
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
         elif {"detail":"Invalid password"}:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
+
+
+@app.post(
+    "/products",
+    status_code=status.HTTP_201_CREATED,
+    response_model=product_models.ProductResponseModel,
+    response_description="Returns created product with generated id.",
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if the provided token is invalid or user tries to create a product for a different owner."
+        },
+        422 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided product data is not valid."
+        }},
+    description="Create a new product for a user",
+)
+async def post_product_by_user(product: product_models.ProductModel, token: str = Header()):
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    post_product_response = requests.post(f"https://cs-product-service.deta.dev/products", json=product.dict(), headers=headers)
+    
+    if post_product_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Users are only allowed to create products for themselves.")
+
+    if post_product_response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=post_product_response.json())
+
+    return post_product_response.json()

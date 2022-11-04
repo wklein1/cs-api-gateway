@@ -30,7 +30,7 @@ def test_post_products_endpoint_fails_invalid_token():
     client = TestClient(app)
     TEST_USER_ID = config("TEST_USER_ID")
     test_product = {
-        "ownerId":TEST_USER_IDF,
+        "ownerId":TEST_USER_ID,
         "name":"test new product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"new product from post request",
@@ -53,6 +53,7 @@ def test_post_products_endpoint_fails_by_creating_not_owned_product():
     #ARRANGE
     client = TestClient(app)
     TEST_USER_ID = config("TEST_USER_ID")
+    VALID_TOKEN = config("VALID_TOKEN")
     test_product = {
         "ownerId":"different user id",
         "name":"test new product",
