@@ -7,8 +7,8 @@ from datetime import datetime,timedelta
 from decouple import config
 import requests
 
-COMPONENTS_SERVICE_API_KEY = config("COMPONENTS_SERVICE_API_KEY")
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
+PRODUCT_SERVICE_ACCESS_KEY = config("PRODUCT_SERVICE_ACCESS_KEY")
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM="HS256"
 JWT_AUDIENCE="kbe-aw2022-frontend.netlify.app"
@@ -18,6 +18,7 @@ app = FastAPI()
 
 jwt_encoder = JwtEncoder(secret=JWT_SECRET, algorithm=JWT_ALGORITHM)
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
+product_service_jwt_encoder = JwtEncoder(secret=PRODUCT_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 
 origins = [
     "http://localhost",
@@ -45,7 +46,7 @@ def decode_auth_token(token:str)->dict|None:
     description="Get all available components.", 
 )
 async def get_components():
-    headers = {'Content-Type': 'application/json','X-API-Key':COMPONENTS_SERVICE_API_KEY}
+    headers = {'Content-Type': 'application/json'}
     response = requests.get("https://cs-components-service.deta.dev/components", headers=headers)
     return response.json()
 
@@ -56,7 +57,7 @@ async def get_components():
     response_description="Returns list of available currencies",
     responses={503 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if microservice request fails."
+            "description": "Error raised if request to microservice fails."
         }},
     description="Get all available currencies.",   
     tags=["currency microservice"] 
@@ -199,7 +200,7 @@ async def get_user_data(user_id:str, token: str = Header()):
     responses={
         503 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if microservice request fails."
+            "description": "Error raised if request to microservice fails."
         },
         422 :{
             "model": error_models.HTTPErrorModel,
@@ -316,7 +317,7 @@ async def change_user_password_by_id(change_password_data: user_models.UserChang
     status_code=status.HTTP_204_NO_CONTENT,
     responses={503 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if microservice request fails."
+            "description": "Error raised if request to microservice fails."
         },
         403 :{
             "model": error_models.HTTPErrorModel,
@@ -369,9 +370,9 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
-    identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
-    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
     post_product_response = requests.post(f"https://cs-product-service.deta.dev/products", json=product.dict(), headers=headers)
     
     if post_product_response.status_code == status.HTTP_403_FORBIDDEN:
@@ -381,3 +382,27 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=post_product_response.json())
 
     return post_product_response.json()
+
+
+@app.delete(
+    "/products/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={403 :{
+            "model": error_models.HTTPErrorModel,
+            "description": "Error raised if provided token is invalid or user tries to delete a product not owned."
+        }},
+    description="Deletes a product by its id, if the user is the owner of the product.",
+)
+async def delete_product_by_id(product_id, token: str = Header()):
+    decoded_token = decode_auth_token(token)
+    if decoded_token is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+
+    user_id = decoded_token["userId"]
+    product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
+    delete_product_response = requests.delete(f"https://cs-product-service.deta.dev/products/{product_id}", headers=headers)
+    
+    if delete_product_response.status_code == status.HTTP_403_FORBIDDEN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not allowed to delete a product not owned.")
