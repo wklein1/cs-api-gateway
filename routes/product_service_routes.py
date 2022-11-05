@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, status,Header
+from fastapi import FastAPI, APIRouter, HTTPException, status, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime,timedelta
 from decouple import config
@@ -29,7 +29,7 @@ router = APIRouter(
         }},
     description="Get all products belonging to a user.",    
 )
-async def get_products_for_user(token: str = Header()):
+async def get_products_for_user(token: str = Cookie()):
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
@@ -58,7 +58,7 @@ async def get_products_for_user(token: str = Header()):
         }},
     description="Get a product by its id, belonging to the user."
 )
-async def get_product_by_id(product_id, token: str = Header()):
+async def get_product_by_id(product_id, token: str = Cookie()):
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
@@ -93,7 +93,7 @@ async def get_product_by_id(product_id, token: str = Header()):
         }},
     description="Create a new product for a user",
 )
-async def post_product_by_user(product: product_models.ProductModel, token: str = Header()):
+async def post_product_by_user(product: product_models.ProductModel, token: str = Cookie()):
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
@@ -132,7 +132,7 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
         }},
     description="Updates product with values specified in request body.",
 )
-async def patch_product_by_id(product: product_models.ProductModel, product_id, token: str = Header()):
+async def patch_product_by_id(product: product_models.ProductModel, product_id, token: str = Cookie()):
    
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
@@ -165,7 +165,7 @@ async def patch_product_by_id(product: product_models.ProductModel, product_id, 
         }},
     description="Deletes a product by its id, if the user is the owner of the product.",
 )
-async def delete_product_by_id(product_id, token: str = Header()):
+async def delete_product_by_id(product_id, token: str = Cookie()):
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")

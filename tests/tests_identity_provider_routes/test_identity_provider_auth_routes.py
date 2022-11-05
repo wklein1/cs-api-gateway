@@ -15,7 +15,7 @@ def test_login_user_endpoint_success():
     response = client.post("/login",json=test_user)
     #ASSERT
     assert response.status_code == 200
-    assert "token" in response.json()
+    assert "token" in response.cookies
     assert response.json()["userName"] == "test_usr"
 
 

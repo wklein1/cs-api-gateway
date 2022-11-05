@@ -32,19 +32,19 @@ def test_update_user_data_endpoint_success():
         "userName":"test_usr2_updated",
         "email":"updated@test.com",
     }
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
-    assert client.get(f"/users/{new_user_id}", headers=headers).json() == expected_user_response
+    assert client.get(f"/users/{new_user_id}", cookies=auth_cookie).json() == expected_user_response
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
 
 def test_update_user_data_endpoint_no_user_name_change_success():
@@ -74,19 +74,19 @@ def test_update_user_data_endpoint_no_user_name_change_success():
         "userName":"test_usr2",
         "email":"updated@test.com",
     }
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
-    assert client.get(f"/users/{new_user_id}", headers=headers).json() == expected_user_response
+    assert client.get(f"/users/{new_user_id}", cookies=auth_cookie).json() == expected_user_response
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)   
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)   
 
 
 def test_update_user_data_endpoint_fails_invalid_password():
@@ -113,19 +113,19 @@ def test_update_user_data_endpoint_fails_invalid_password():
     expected_error = {
         "detail":"Invalid password"
     }
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
 
 def test_update_user_data_endpoint_fails_invalid_token():
@@ -142,11 +142,11 @@ def test_update_user_data_endpoint_fails_invalid_token():
     expected_error = {
         "detail":"Invalid token"
     }
-    headers = {
+    auth_cookie = {
           "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MDNjN2I2Yi00MDA5LTExZWQtYWRiZS03NzQyY2VmNGI1MDQiLCJleHAiOjE2Njc0NjIzODQuNzY1Njk1fQ.QTGA2c2r2EGZ6hjZ0OPqKuXf9VfHnPuTJDi40tvOfW4"
     }
     #ACT
-    response = client.patch(f"/users/{TEST_USER_ID}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{TEST_USER_ID}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
@@ -168,19 +168,19 @@ def test_update_user_data_endpoint_fails_user_not_found():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
    
     expected_error = {
         "detail":"User not found"
     }
-    headers = {
-        "token": new_user["token"]
+    auth_cookie = {
+        "token": new_user_token
     }
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 404
     assert response.json() == expected_error
@@ -208,18 +208,18 @@ def test_update_user_data_endpoint_fails_user_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
 
 def test_update_user_data_endpoint_fails_first_name_invalid():
@@ -244,18 +244,18 @@ def test_update_user_data_endpoint_fails_first_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
 
 def test_update_user_data_endpoint_fails_last_name_invalid():
@@ -280,18 +280,18 @@ def test_update_user_data_endpoint_fails_last_name_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
 
 def test_update_user_data_endpoint_fails_email_invalid():
@@ -316,15 +316,15 @@ def test_update_user_data_endpoint_fails_email_invalid():
         "password":"testtesttest4"
     }
 
-    new_user = client.post("/register",json=test_user)
-    new_user = new_user.json()
-    new_user_id = jwt_encoder.decode_jwt(new_user["token"],audience=jwt_aud,issuer=jwt_iss)["userId"]
-    headers = {
-        "token": new_user["token"]
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+        "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, headers=headers)
+    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, headers=headers)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)

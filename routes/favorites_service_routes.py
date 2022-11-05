@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, status,Header
+from fastapi import FastAPI, APIRouter, HTTPException, status, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime,timedelta
 from decouple import config
@@ -32,7 +32,7 @@ router = APIRouter(
         }},
     description="Get all favorites belonging to a user.",    
 )
-async def get_favorites_for_user(token: str = Header()):
+async def get_favorites_for_user(token: str = Cookie()):
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
@@ -67,7 +67,7 @@ async def get_favorites_for_user(token: str = Header()):
         }},
     description="Adds an item to the favorites list of the user.",
 )
-async def adds_item_to_user_favorites_list(item_to_add:favorites_models.ToggleFavoriteModel, token: str = Header()):
+async def adds_item_to_user_favorites_list(item_to_add:favorites_models.ToggleFavoriteModel, token: str = Cookie()):
    
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
@@ -105,7 +105,7 @@ async def adds_item_to_user_favorites_list(item_to_add:favorites_models.ToggleFa
         }},
     description="Removes an item from the favorites list of a user"
 )
-async def delete_item_from_favorites_for_user(item_to_remove:favorites_models.ToggleFavoriteModel, token: str = Header()):
+async def delete_item_from_favorites_for_user(item_to_remove:favorites_models.ToggleFavoriteModel, token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
