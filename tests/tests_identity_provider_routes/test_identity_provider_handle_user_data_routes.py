@@ -20,7 +20,7 @@ def test_get_user_endpoint_returns_user_data():
         "email":"test@test.com",
     }
     #ACT
-    response = client.get(f"/users/{TEST_USER_ID}", cookies=auth_cookie)
+    response = client.get(f"/users", cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 200
     assert response.json() == expected_user_data
@@ -52,7 +52,7 @@ def test_get_user_endpoint_fails_user_not_found():
     }
 
     #ACT
-    response = client.get(f"/users/{new_user_id}", cookies=auth_cookie)
+    response = client.get(f"/users", cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 404
     assert response.json() == expected_error
@@ -69,43 +69,10 @@ def test_get_user_endpoint_fails_invalid_token():
         "detail": "Invalid token"
     }
     #ACT
-    response = client.get(f"/users/{TEST_USER_ID}", cookies=auth_cookie)
+    response = client.get(f"/users", cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
-
-
-def test_get_user_endpoint_fails_unauthorized_user_id():
-    #ARRANGE
-    client = TestClient(app)
-    VALID_TOKEN=config("VALID_TOKEN")
-    JWT_SECRET = config("JWT_SECRET")
-    jwt_aud="kbe-aw2022-frontend.netlify.app"
-    jwt_iss="cs-identity-provider.deta.dev"
-    jwt_encoder = JwtEncoder(JWT_SECRET, "HS256")
-    test_user = {
-        "first_name":"test",
-        "last_name":"test",
-        "user_name":"test_usr2",
-        "email":"test@test.com",
-        "password":"testtesttest4"
-    }
-    new_user_response = client.post("/register",json=test_user)
-    new_user_token = new_user_response.cookies.get("token")
-    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
-    auth_cookie = {
-          "token": VALID_TOKEN
-    }
-    expected_error = {
-        "detail": "User is not authorized to get this data"
-    }
-    #ACT
-    response = client.get(f"/users/{new_user_id}", cookies=auth_cookie)
-    #ASSERT
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.json() == expected_error
-    #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, cookies={"token":new_user_token})
 
 
 def test_change_password_endpoint_success():
@@ -133,7 +100,7 @@ def test_change_password_endpoint_success():
           "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}/password", json=test_user_password_update, cookies=auth_cookie)
+    response = client.patch(f"/users/password", json=test_user_password_update, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
     #CLEANUP
@@ -168,7 +135,7 @@ def test_change_password_endpoint_fails_forbidden_wrong_password():
           "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}/password", json=test_user_password_update, cookies=auth_cookie)
+    response = client.patch(f"/users/password", json=test_user_password_update, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
@@ -204,7 +171,7 @@ def test_change_password_endpoint_fails_invalid_token():
           "token": "invalid token"
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}/password", json=test_user_password_update, cookies=auth_cookie)
+    response = client.patch(f"/users/password", json=test_user_password_update, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
@@ -237,7 +204,7 @@ def test_change_password_endpoint_fails_invalid_new_password():
           "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}/password", json=test_user_password_update, cookies=auth_cookie)
+    response = client.patch(f"/users/password", json=test_user_password_update, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
@@ -273,7 +240,7 @@ def test_change_password_endpoint_fails_user_not_found():
     }
     client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
     #ACT
-    response = client.patch(f"/users/{new_user_id}/password", json=test_user_password_update, cookies=auth_cookie)
+    response = client.patch(f"/users/password", json=test_user_password_update, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 404
     assert response.json() == expected_error

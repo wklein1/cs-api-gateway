@@ -39,10 +39,10 @@ def test_update_user_data_endpoint_success():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
-    assert client.get(f"/users/{new_user_id}", cookies=auth_cookie).json() == expected_user_response
+    assert client.get(f"/users", cookies=auth_cookie).json() == expected_user_response
     #CLEANUP
     client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
 
@@ -81,10 +81,10 @@ def test_update_user_data_endpoint_no_user_name_change_success():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
-    assert client.get(f"/users/{new_user_id}", cookies=auth_cookie).json() == expected_user_response
+    assert client.get(f"/users", cookies=auth_cookie).json() == expected_user_response
     #CLEANUP
     client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)   
 
@@ -120,7 +120,7 @@ def test_update_user_data_endpoint_fails_invalid_password():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
@@ -146,7 +146,7 @@ def test_update_user_data_endpoint_fails_invalid_token():
           "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MDNjN2I2Yi00MDA5LTExZWQtYWRiZS03NzQyY2VmNGI1MDQiLCJleHAiOjE2Njc0NjIzODQuNzY1Njk1fQ.QTGA2c2r2EGZ6hjZ0OPqKuXf9VfHnPuTJDi40tvOfW4"
     }
     #ACT
-    response = client.patch(f"/users/{TEST_USER_ID}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 403
     assert response.json() == expected_error
@@ -180,7 +180,7 @@ def test_update_user_data_endpoint_fails_user_not_found():
     }
     client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 404
     assert response.json() == expected_error
@@ -215,7 +215,7 @@ def test_update_user_data_endpoint_fails_user_name_invalid():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
@@ -251,7 +251,7 @@ def test_update_user_data_endpoint_fails_first_name_invalid():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
@@ -287,7 +287,7 @@ def test_update_user_data_endpoint_fails_last_name_invalid():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP
@@ -323,7 +323,7 @@ def test_update_user_data_endpoint_fails_email_invalid():
         "token": new_user_token
     }
     #ACT
-    response = client.patch(f"/users/{new_user_id}", json=updated_test_user, cookies=auth_cookie)
+    response = client.patch(f"/users", json=updated_test_user, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 422
     #CLEANUP

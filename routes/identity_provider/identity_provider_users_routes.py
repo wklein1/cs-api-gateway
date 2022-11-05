@@ -20,7 +20,7 @@ router = APIRouter(
 )
 
 @router.get(
-    "/{user_id}",
+    "",
     description="Get user data of a given user.",
     responses={ 
         404 :{
@@ -30,26 +30,18 @@ router = APIRouter(
         403 :{
             "model": error_models.HTTPErrorModel,
             "description": "Error raised if the provided token is invalid."
-        },
-        401 :{
-            "model": error_models.HTTPErrorModel,
-            "description": "Error raised if request is unauthorized."
         }},
     response_model=user_models.UserOutModel,
     response_description="Returns an object with user data.",
 )
-async def get_user_data(user_id:str, token: str = Cookie()):
+async def get_user_data(token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    token_user_id = decoded_token["userId"]
-    if token_user_id != user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to get this data")
-
+    user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     get_user_data_response = requests.get(f"https://cs-identity-provider.deta.dev/users/{user_id}", headers=headers)
     
@@ -60,7 +52,7 @@ async def get_user_data(user_id:str, token: str = Cookie()):
 
 
 @router.patch(
-    "/{user_id}",
+    "",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Returns no data.",
     responses={
@@ -76,28 +68,20 @@ async def get_user_data(user_id:str, token: str = Cookie()):
             "model": error_models.HTTPErrorModel,
             "description": "Error raised if provided password or token is invalid."
             },
-        401 :{
-            "model": error_models.HTTPErrorModel,
-            "description": "Error raised if request is unauthorized."
-        },
         404 :{
                 "model": error_models.HTTPErrorModel,
                 "description": "Error raised if the user can not be found."
         }},
     description="Updates user with values specified in request body.",
 )
-async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: str, token: str = Cookie()):
+async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    token_user_id = decoded_token["userId"]
-    if token_user_id != user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to change this data")
-    
+    user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     patch_data_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}", json=user_data.dict(), headers=headers)
     
@@ -117,7 +101,7 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: s
 
 
 @router.patch(
-    "/{user_id}/password",
+    "/password",
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Returns no data.",
     responses={
@@ -129,10 +113,6 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: s
             "model": error_models.HTTPErrorModel,
             "description": "Error raised if password update is not valid."
         },
-        401 :{
-            "model": error_models.HTTPErrorModel,
-            "description": "Error raised if request is unauthorized."
-        },
         403 :{
             "model": error_models.HTTPErrorModel,
             "description": "Error raised if user password is invalid."
@@ -143,7 +123,7 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: s
         }},
     description="Updates the user password.",
 )
-async def change_user_password_by_id(change_password_data: user_models.UserChangePasswordInModel, user_id: str, token: str = Cookie()):
+async def change_user_password_by_id(change_password_data: user_models.UserChangePasswordInModel, token: str = Cookie()):
     
     user_change_password_dict = change_password_data.dict()
     new_password = user_change_password_dict["new_password"]
@@ -152,12 +132,8 @@ async def change_user_password_by_id(change_password_data: user_models.UserChang
     if decoded_token is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    token_user_id = decoded_token["userId"]
-    if token_user_id != user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is not authorized to change this data")
-    
+    user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     patch_password_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}/password", json=change_password_data.dict(), headers=headers)
 
@@ -197,7 +173,6 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cooki
 
     user_id = decoded_token["userId"]
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=headers)
     
