@@ -18,10 +18,10 @@ def test_register_user_endpoint_success():
     response = client.post("/register",json=test_user)
     #ASSERT
     assert response.status_code == 201
-    assert "token" in response.json()
+    assert "token" in response.cookies
     assert response.json()["userName"] == "test_usr2"
     #CLEANUP
-    client.delete("/register", json={"password":"testtesttest4"}, headers={"token":response.json()["token"]})
+    client.delete("/register", json={"password":"testtesttest4"}, cookies={"token":response.cookies.get("token")})
 
 
 def test_register_user_endpoint_fails_invalid_password():

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, status, Header
+from fastapi import FastAPI, APIRouter, HTTPException, status, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime,timedelta
 from decouple import config
@@ -38,7 +38,7 @@ router = APIRouter(
     response_model=user_models.UserOutModel,
     response_description="Returns an object with user data.",
 )
-async def get_user_data(user_id:str, token: str = Header()):
+async def get_user_data(user_id:str, token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
@@ -86,7 +86,7 @@ async def get_user_data(user_id:str, token: str = Header()):
         }},
     description="Updates user with values specified in request body.",
 )
-async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: str, token: str = Header()):
+async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: str, token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
@@ -143,7 +143,7 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, user_id: s
         }},
     description="Updates the user password.",
 )
-async def change_user_password_by_id(change_password_data: user_models.UserChangePasswordInModel, user_id: str, token: str = Header()):
+async def change_user_password_by_id(change_password_data: user_models.UserChangePasswordInModel, user_id: str, token: str = Cookie()):
     
     user_change_password_dict = change_password_data.dict()
     new_password = user_change_password_dict["new_password"]
@@ -189,7 +189,7 @@ async def change_user_password_by_id(change_password_data: user_models.UserChang
         }},
     description="Deletes a user.",
 )
-async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Header()):
+async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cookie()):
     
     decoded_token = decode_auth_token(token)
     if decoded_token is None:
