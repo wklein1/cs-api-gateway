@@ -12,7 +12,7 @@ class ProductModel(CustomBaseModel):
         return getattr(self, item)
 
 class ProductResponseModel(ProductModel):
-    key: str = Field(alias="productId")
+    productId: str = Field(alias="id")
 
 class ProductRequestModel(ProductModel):
     key: str = Field(alias="productId")
