@@ -26,7 +26,7 @@ def test_post_products_endpoint_success():
     assert response.status_code == 201
     assert test_product.items() <=response_product.items()
     #CLEANUP
-    client.delete(f"/products/{response_product['productId']}",cookies=auth_cookie)
+    client.delete(f"/products/{response_product['id']}",cookies=auth_cookie)
 
     
 
@@ -85,7 +85,7 @@ def test_get_products_endpoint_returns_products_for_user():
     TEST_USER_ID = config("TEST_USER_ID")
     VALID_TOKEN = config("VALID_TOKEN")
     expected_product = {
-        "productId":"29f6f518-53a8-11ed-a980-cd9f67f7363d",
+        "id":"29f6f518-53a8-11ed-a980-cd9f67f7363d",
         "ownerId":TEST_USER_ID,
         "name":"test product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
@@ -125,14 +125,14 @@ def test_get_single_product_endpoint_returns_product_for_user_by_id():
     TEST_USER_ID = config("TEST_USER_ID")
     VALID_TOKEN = config("VALID_TOKEN")
     expected_product = {
-        "productId":"29f6f518-53a8-11ed-a980-cd9f67f7363d",
+        "id":"29f6f518-53a8-11ed-a980-cd9f67f7363d",
         "ownerId":TEST_USER_ID,
         "name":"test product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"test product for get method",
         "price":0.0
     }
-    expected_product_id = expected_product['productId']
+    expected_product_id = expected_product['id']
     auth_cookie = {
           "token": VALID_TOKEN
     }
@@ -215,7 +215,7 @@ def test_patch_endpoint_updates_owned_product_success():
           "token": VALID_TOKEN
     }
     post_response = client.post("/products",json=test_product, cookies=auth_cookie)
-    test_product_id = post_response.json()["productId"]
+    test_product_id = post_response.json()["id"]
     #ACT
     patch_response = client.patch(f"/products/{test_product_id}",json=updated_test_product, cookies=auth_cookie)
     #ASSERT
@@ -317,7 +317,7 @@ def test_delete_product_endpoint_success():
           "token": VALID_TOKEN
     }
     post_response = client.post("/products",json=test_product, cookies=auth_cookie)
-    product_id = post_response.json()["productId"]
+    product_id = post_response.json()["id"]
     #ACT
     del_response = client.delete(f"/products/{product_id}",cookies=auth_cookie)
     #ASSERT
