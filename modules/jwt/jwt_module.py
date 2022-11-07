@@ -14,14 +14,14 @@ class JwtEncoder():
 
     def decode_jwt(self, token:str, audience=None, issuer=None):
         try:
-            decoded_token = jwt.decode(jwt=token, key = self._jwt_secret, algorithms=[self._jwt_algorithm], audience=audience, issuer=issuer)
+            decoded_token = jwt.decode(jwt=token, key = self._jwt_secret, algorithms=[self._jwt_algorithm], audience=audience, issuer=issuer ,leeway=1)
             return decoded_token 
         except Exception as ex:
             raise ex
             
     def validate_jwt(self, token:str, audience=None, issuer=None):
         try:
-            decoded_token = jwt.decode(jwt=token, key = self._jwt_secret, algorithms=[self._jwt_algorithm],  audience=audience, issuer=issuer)
+            decoded_token = jwt.decode(jwt=token, key = self._jwt_secret, algorithms=[self._jwt_algorithm], audience=audience, issuer=issuer, leeway=1)
             return True
         except:
             return False

@@ -48,7 +48,7 @@ async def register_user(user_data: user_models.UserInModel, response : Response)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=post_user_response.json())
 
     token = post_user_response.json()["token"]
-    response.set_cookie(key="token",value=token, httponly=True) 
+    response.headers["Set-Cookie"] = f"token={token}; Secure; HttpOnly"
     return post_user_response.json()
 
 
@@ -77,6 +77,6 @@ async def login_user(user_data: auth_models.LoginModel, response : Response):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     token = login_user_response.json()["token"]
-    response.set_cookie(key="token",value=token, httponly=True) 
+    response.headers["Set-Cookie"] = f"token={token}; Secure; HttpOnly"
 
     return login_user_response.json()
