@@ -2,7 +2,6 @@ from models.custom_base_model import CustomBaseModel
 from pydantic import Field
 
 class ProductModel(CustomBaseModel):
-    owner_id: str
     name: str
     description: str
     component_ids: list[str]

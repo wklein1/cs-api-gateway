@@ -101,8 +101,11 @@ async def post_product_by_user(product: product_models.ProductModel, token: str 
     user_id = decoded_token["userId"]
     product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
+    new_product = product.dict()
+    new_product["ownerId"] = user_id
+
     headers = {'Content-Type':'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
-    post_product_response = requests.post(f"https://cs-product-service.deta.dev/products", json=product.dict(), headers=headers)
+    post_product_response = requests.post(f"https://cs-product-service.deta.dev/products", json=new_product, headers=headers)
     
     if post_product_response.status_code == status.HTTP_403_FORBIDDEN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Users are only allowed to create products for themselves.")
@@ -141,8 +144,11 @@ async def patch_product_by_id(product: product_models.ProductModel, product_id, 
     user_id = decoded_token["userId"]
     product_service_access_token = product_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     
+    new_product = product.dict()
+    new_product["ownerId"] = user_id
+
     headers = {'Content-Type':'application/json', 'userId':user_id, 'microserviceAccessToken':product_service_access_token}
-    patch_product_response = requests.patch(f"https://cs-product-service.deta.dev/products/{product_id}", json=product.dict(), headers=headers)
+    patch_product_response = requests.patch(f"https://cs-product-service.deta.dev/products/{product_id}", json=new_product, headers=headers)
     
     if patch_product_response.status_code == status.HTTP_404_NOT_FOUND:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found.")
