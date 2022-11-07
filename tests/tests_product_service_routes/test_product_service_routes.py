@@ -13,7 +13,12 @@ def test_post_products_endpoint_success():
         "name":"test new product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"new product from post request",
-        "price":0.0
+    }
+    expected_response_product = {
+        "name":"test new product",
+        "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
+        "description":"new product from post request",
+        "price":638.9
     }
     auth_cookie = {
           "token": VALID_TOKEN
@@ -23,7 +28,7 @@ def test_post_products_endpoint_success():
     #ASSERT
     response_product = response.json()
     assert response.status_code == 201
-    assert test_product.items() <=response_product.items()
+    assert expected_response_product.items() <=response_product.items()
     #CLEANUP
     client.delete(f"/products/{response_product['id']}",cookies=auth_cookie)
 
@@ -37,7 +42,6 @@ def test_post_products_endpoint_fails_invalid_token():
         "name":"test new product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"new product from post request",
-        "price":0.0
     }
     auth_cookie = {
           "token": "invalid token"
@@ -62,7 +66,7 @@ def test_get_products_endpoint_returns_products_for_user():
         "name":"test product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"test product for get method",
-        "price":0.0
+        "price":638.9
     }
     auth_cookie = {
           "token": VALID_TOKEN
@@ -101,7 +105,7 @@ def test_get_single_product_endpoint_returns_product_for_user_by_id():
         "name":"test product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"test product for get method",
-        "price":0.0
+        "price":638.9
     }
     expected_product_id = expected_product['id']
     auth_cookie = {
@@ -155,13 +159,12 @@ def test_patch_endpoint_updates_product_success():
         "name":"test new product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"new product from post request",
-        "price":0.0
+        
     }
     updated_test_product = {
         "name":"test patched product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"updated product from patch request",
-        "price":0.0
     }
     auth_cookie = {
           "token": VALID_TOKEN
@@ -185,7 +188,6 @@ def test_patch_endpoint_fails_invalid_token():
         "name":"test patched product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"updated product from patch request",
-        "price":0.0
     }
     expected_error = {
         "detail": "Invalid token"
@@ -209,7 +211,6 @@ def test_patch_endpoint_fails_updating_not_existing_product():
         "name":"test patched product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"updated product from patch request",
-        "price":0.0
     }
     expected_error = {
         "detail": "Product not found."
@@ -233,7 +234,6 @@ def test_delete_product_endpoint_success():
         "name":"test new product",
         "componentIds":["546c08d7-539d-11ed-a980-cd9f67f7363d","546c08da-539d-11ed-a980-cd9f67f7363d"],
         "description":"new product from post request",
-        "price":0.0
     }
     auth_cookie = {
           "token": VALID_TOKEN
