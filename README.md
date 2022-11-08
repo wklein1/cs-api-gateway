@@ -13,7 +13,7 @@ Frontend: https://github.com/kbe-aw2022/frontend (deploy: https://kbe-aw2022-fro
 
 Microservices:
 
-Api gateway: https://github.com/wklein1/cs-api-gateway
+Api gateway: https://github.com/wklein1/cs-api-gateway (You are here)
 
 Identity provider: https://github.com/wklein1/cs-identity-provider
 
