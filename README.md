@@ -4,11 +4,12 @@
 
 ![api_gateway](https://user-images.githubusercontent.com/75163928/200685777-a88d311f-e173-4252-b776-0925462f5061.jpg)
 
-Api gateway deploy: https://cs-api-gateway.deta.dev/docs
 
 A fullstack application project with microservice architecture backend. (Work in progress)
 
-Tech Stack: React, FastApi, Deta (noSQL DB)
+Tech Stack: React, FastApi, Deta (noSQL cloud DB)
+
+Api gateway deploy: https://cs-api-gateway.deta.dev/docs
 
 Frontend: https://github.com/kbe-aw2022/frontend (deploy: https://kbe-aw2022-frontend.netlify.app/)
 
