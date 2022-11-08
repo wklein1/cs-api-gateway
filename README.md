@@ -2,6 +2,7 @@
 
 [![Automated tests](https://github.com/wklein1/cs-api-gateway/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/wklein1/cs-api-gateway/actions/workflows/python-app.yml)
 
+![api_gateway](https://user-images.githubusercontent.com/75163928/200685777-a88d311f-e173-4252-b776-0925462f5061.jpg)
 
 Api gateway deploy: https://cs-api-gateway.deta.dev/docs
 
