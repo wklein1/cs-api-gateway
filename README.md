@@ -9,7 +9,7 @@ A fullstack application project with microservice architecture backend. (Work in
 
 Techstack: React, FastApi, Deta (noSQL DB)
 
-Frontend: https://github.com/kbe-aw2022/frontend
+Frontend: https://github.com/kbe-aw2022/frontend (deploy: https://kbe-aw2022-frontend.netlify.app/)
 
 Microservices:
 
