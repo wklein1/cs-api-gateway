@@ -3,7 +3,7 @@
 [![Automated tests](https://github.com/wklein1/cs-api-gateway/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/wklein1/cs-api-gateway/actions/workflows/python-app.yml)
 
 
-Api gateway: https://cs-api-gateway.deta.dev/docs
+Api gateway deploy: https://cs-api-gateway.deta.dev/docs
 
 A fullstack application project with microservice architecture backend.
 
