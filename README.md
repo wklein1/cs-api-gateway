@@ -23,4 +23,4 @@ Product service: https://github.com/wklein1/cs-product-service
 
 Favorites service: https://github.com/wklein1/cs-favorites-service
 
-Currency service: https://github.com/wklein1/cs-currency-service/settings
+Currency service: https://github.com/wklein1/cs-currency-service
