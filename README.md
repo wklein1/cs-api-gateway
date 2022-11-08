@@ -5,7 +5,7 @@
 
 Api gateway deploy: https://cs-api-gateway.deta.dev/docs
 
-A fullstack application project with microservice architecture backend.
+A fullstack application project with microservice architecture backend. (Work in progress)
 
 Techstack: React, FastApi, Deta (noSQL DB)
 
