@@ -11,8 +11,10 @@ from utils import decode_auth_token
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM="HS256"
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
+FAVORITES_SERVICE_ACCESS_KEY = config("FAVORITES_SERVICE_ACCESS_KEY")
 
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
+favorites_service_jwt_encoder = JwtEncoder(secret=FAVORITES_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 
 router = APIRouter(
     prefix="/users",
@@ -172,9 +174,17 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cooki
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
+
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    favorites_service_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    delete_favorites_obj_response = requests.delete("https://cs-favorites-service.deta.dev/favorites", json={"ownerId":user_id}, headers=favorites_service_headers)
+    
+    if delete_favorites_obj_response.status_code != status.HTTP_204_NO_CONTENT:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
-    delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=headers)
+    identity_provider_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
+    delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=identity_provider_headers)
     
     if delete_user_response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
