@@ -11,8 +11,10 @@ from utils import decode_auth_token
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM="HS256"
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
+FAVORITES_SERVICE_ACCESS_KEY = config("FAVORITES_SERVICE_ACCESS_KEY")
 
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
+favorites_service_jwt_encoder = JwtEncoder(secret=FAVORITES_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 
 router = APIRouter(
     tags=["auth (identity provider)"]
@@ -48,6 +50,17 @@ async def register_user(user_data: user_models.UserInModel, response : Response)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=post_user_response.json())
 
     token = post_user_response.json()["token"]
+
+    decoded_token = decode_auth_token(token)
+    user_id = decoded_token["userId"]
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    
+    headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    create_favorites_obj_response = requests.post("https://cs-favorites-service.deta.dev/favorites", json={"ownerId":user_id}, headers=headers)
+    
+    if create_favorites_obj_response.status_code != status.HTTP_201_CREATED:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+
     response.headers["Set-Cookie"] = f"token={token}; Secure; HttpOnly"
     return post_user_response.json()
 

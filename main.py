@@ -16,6 +16,8 @@ app.include_router(router=currency_service_routes.router)
 origins = [
     "http://localhost",
     "http://localhost:3000",
+    "https://kbe-aw2022-frontend.netlify.app",
+    "kbe-aw2022-frontend.netlify.app",
 ]
 
 app.add_middleware(

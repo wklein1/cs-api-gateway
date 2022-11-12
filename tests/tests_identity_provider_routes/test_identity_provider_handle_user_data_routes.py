@@ -176,7 +176,7 @@ def test_change_password_endpoint_fails_invalid_token():
     assert response.status_code == 403
     assert response.json() == expected_error
     #CLEANUP
-    client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
+    client.delete("/users", json={"password":"testtesttest4"}, cookies={"token":new_user_token})
 
 
 def test_change_password_endpoint_fails_invalid_new_password():
@@ -282,3 +282,31 @@ def test_delete_user_endpoint_success():
     response = client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
     #ASSERT
     assert response.status_code == 204
+
+
+def test_delete_user_endpoint_deletes_user_favorites_obj():
+    #ARRANGE
+    JWT_SECRET = config("JWT_SECRET")
+    jwt_aud="kbe-aw2022-frontend.netlify.app"
+    jwt_iss="cs-identity-provider.deta.dev"
+    jwt_encoder = JwtEncoder(JWT_SECRET, "HS256")
+    client = TestClient(app)
+    test_user = {
+        "first_name":"test",
+        "last_name":"test",
+        "user_name":"test_usr2",
+        "email":"test@test.com",
+        "password":"testtesttest4"
+    }
+    new_user_response = client.post("/register",json=test_user)
+    new_user_token = new_user_response.cookies.get("token")
+    new_user_id = jwt_encoder.decode_jwt(token=new_user_token,audience=jwt_aud,issuer=jwt_iss)["userId"]
+    auth_cookie = {
+          "token": new_user_token
+    }
+    #ACT
+    delete_user_response = client.delete("/users", json={"password":"testtesttest4"}, cookies=auth_cookie)
+    get_favorites_obj_response = client.get("/favorites", json={"ownerId":new_user_id}, cookies=auth_cookie)
+    #ASSERT
+    assert delete_user_response.status_code == 204
+    assert delete_user_response.status_code == 204

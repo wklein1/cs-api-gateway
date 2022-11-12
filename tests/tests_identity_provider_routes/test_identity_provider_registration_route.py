@@ -21,7 +21,29 @@ def test_register_user_endpoint_success():
     assert "token" in response.cookies
     assert response.json()["userName"] == "test_usr2"
     #CLEANUP
-    client.delete("/register", json={"password":"testtesttest4"}, cookies={"token":response.cookies.get("token")})
+    client.delete("/users", json={"password":"testtesttest4"}, cookies={"token":response.cookies.get("token")})
+
+
+def test_register_user_creates_favorites_obj_for_user():
+    #ARRANGE
+    client = TestClient(app)
+    test_user = {
+        "first_name":"test",
+        "last_name":"test",
+        "user_name":"test_usr2",
+        "email":"test@test.com",
+        "password":"testtesttest4"
+    }
+    #ACT
+    register_user_response = client.post("/register",json=test_user)
+    auth_token = register_user_response.cookies.get("token")
+    get_favorites_obj_response = client.get("/favorites", cookies={"token":auth_token})
+    #ASSERT
+    assert get_favorites_obj_response.status_code == 200
+    assert "componentIds" in get_favorites_obj_response.json()
+
+    #CLEANUP
+    client.delete("/users", json={"password":"testtesttest4"}, cookies={"token":auth_token})
 
 
 def test_register_user_endpoint_fails_invalid_password():
