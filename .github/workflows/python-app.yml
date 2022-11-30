@@ -23,6 +23,7 @@ jobs:
       run: |
          touch .env
          echo TEST_USER_ID=${{ secrets.TEST_USER_ID }} >> .env
+         echo DUMMY_ACCOUNT_USER_ID=${{ secrets.DUMMY_ACCOUNT_USER_ID }} >> .env
          echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
          echo VALID_TOKEN=${{ secrets.VALID_TOKEN }} >> .env
          echo IDENTITY_PROVIDER_ACCESS_KEY=${{ secrets.IDENTITY_PROVIDER_ACCESS_KEY }} >> .env
