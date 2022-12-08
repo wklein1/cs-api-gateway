@@ -193,13 +193,6 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cooki
     if is_protected(user_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is protected from deletion")
 
-    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
-    favorites_service_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
-    delete_favorites_obj_response = requests.delete("https://cs-favorites-service.deta.dev/favorites", json={"ownerId":user_id}, headers=favorites_service_headers)
-    
-    if delete_favorites_obj_response.status_code != status.HTTP_204_NO_CONTENT:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
-
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     identity_provider_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     delete_user_response = requests.delete(f"https://cs-identity-provider.deta.dev/users", json=passwordIn.dict(), headers=identity_provider_headers)
@@ -212,3 +205,11 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cooki
             raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
         elif {"detail":"Invalid password"}:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
+
+    favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
+    favorites_service_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
+    delete_favorites_obj_response = requests.delete("https://cs-favorites-service.deta.dev/favorites", json={"ownerId":user_id}, headers=favorites_service_headers)
+
+    if delete_favorites_obj_response.status_code != status.HTTP_204_NO_CONTENT:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Request to microservice failed")
+    
