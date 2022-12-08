@@ -12,6 +12,7 @@ JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM="HS256"
 IDENTITY_PROVIDER_ACCESS_KEY = config("IDENTITY_PROVIDER_ACCESS_KEY")
 FAVORITES_SERVICE_ACCESS_KEY = config("FAVORITES_SERVICE_ACCESS_KEY")
+DUMMY_ACCOUNT_USER_ID = config("DUMMY_ACCOUNT_USER_ID")
 
 identity_provider_jwt_encoder = JwtEncoder(secret=IDENTITY_PROVIDER_ACCESS_KEY, algorithm=JWT_ALGORITHM)
 favorites_service_jwt_encoder = JwtEncoder(secret=FAVORITES_SERVICE_ACCESS_KEY, algorithm=JWT_ALGORITHM)
@@ -20,6 +21,15 @@ router = APIRouter(
     prefix="/users",
     tags=["user data (identity provider)"]
 )
+
+
+def is_protected(user_id):
+    protected_user_ids = [DUMMY_ACCOUNT_USER_ID]
+    if user_id in protected_user_ids:
+        return True
+    else:
+        return False
+
 
 @router.get(
     "",
@@ -68,7 +78,7 @@ async def get_user_data(token: str = Cookie()):
         },
         403 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if provided password or token is invalid."
+            "description": "Error raised if provided password or token is invalid, or the user is protected from change."
             },
         404 :{
                 "model": error_models.HTTPErrorModel,
@@ -83,6 +93,9 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, token: str
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
+    if is_protected(user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is protected from change")
+
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     patch_data_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}", json=user_data.dict(), headers=headers)
@@ -117,7 +130,7 @@ async def patch_user_by_id(user_data: user_models.UserUpdatesInModel, token: str
         },
         403 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if user password is invalid."
+            "description": "Error raised if user password is invalid or the user is protected from change."
             },
         404 :{
                 "model": error_models.HTTPErrorModel,
@@ -135,6 +148,9 @@ async def change_user_password_by_id(change_password_data: user_models.UserChang
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
+    if is_protected(user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is protected from change")
+
     identity_provider_access_token = identity_provider_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':identity_provider_access_token}
     patch_password_response = requests.patch(f"https://cs-identity-provider.deta.dev/users/{user_id}/password", json=change_password_data.dict(), headers=headers)
@@ -163,7 +179,7 @@ async def change_user_password_by_id(change_password_data: user_models.UserChang
         },
         403 :{
             "model": error_models.HTTPErrorModel,
-            "description": "Error raised if the provided password is invalid."
+            "description": "Error raised if the provided password is invalid or the user is protected from deletion."
         }},
     description="Deletes a user.",
 )
@@ -174,6 +190,8 @@ async def delete_user(passwordIn:auth_models.PasswordInModel, token: str = Cooki
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user_id = decoded_token["userId"]
+    if is_protected(user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is protected from deletion")
 
     favorites_service_access_token = favorites_service_jwt_encoder.generate_jwt({"exp":(datetime.now() + timedelta(minutes=1)).timestamp()})
     favorites_service_headers = {'Content-Type': 'application/json', 'userId':user_id, 'microserviceAccessToken':favorites_service_access_token}
